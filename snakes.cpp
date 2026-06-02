@@ -6,6 +6,7 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
 #include <SFML/Window.hpp>
+#include <SFML/Audio.hpp>
 #include <cstdlib>
 #include <ctime>
 #include <cmath>
@@ -94,7 +95,7 @@ struct Dice{
 // ── Player ────────────────────────────────────────────────────
 struct Player{
     std::string name; sf::Color color;
-    int pos=0; bool done=false,moving=false,target=0;
+    int pos=0; bool done=false,moving=false; int target=0;
     float mt=0; sf::Vector2f apos;
     void startMove(int to){target=to;moving=true;mt=0;apos=c2p(pos>0?pos:1);}
     void update(float dt){
@@ -182,6 +183,14 @@ int main(){
     std::vector<Player> players;
     Dice dice;
 
+    // ── Sounds ───────────────────────────────────────────────
+    sf::SoundBuffer bufDice,bufSnake,bufLadder,bufWin;
+    bufDice.loadFromFile("dice.wav");
+    bufSnake.loadFromFile("snake.wav");
+    bufLadder.loadFromFile("ladder.wav");
+    bufWin.loadFromFile("win.wav");
+    sf::Sound sndDice(bufDice),sndSnake(bufSnake),sndLadder(bufLadder),sndWin(bufWin);
+
     // All buttons on heap so sf::Text default-construct is avoided
     Btn bPlay,bQuit,b2P,b3P,b4P,bStart,bRoll,bMenu,bAgain,bMMenu;
 
@@ -205,7 +214,7 @@ int main(){
         cur=0;waitRoll=true;anim=false;pendSL=false;tkStart=false;secStart=false;
         statusMsg=std::string(PN[0])+"'s turn - Roll!"; evMsg="";
     };
-    auto doRoll=[&](){if(!waitRoll||anim)return;dice.roll();anim=true;waitRoll=false;};
+    auto doRoll=[&](){if(!waitRoll||anim)return;dice.roll();sndDice.play();anim=true;waitRoll=false;};
 
     sf::Clock clk;
     while(win.isOpen()){
@@ -241,9 +250,9 @@ int main(){
                 }else if(!players[cur].moving){
                     tkStart=false; Player& p=players[cur];
                     auto si=SNAKES.find(p.pos),li=LADDERS.find(p.pos);
-                    if(si!=SNAKES.end()){pendSL=true;pendDest=si->second;evMsg="SNAKE! "+p.name+" slides to "+std::to_string(pendDest)+"!";evTimer=2.5f;}
-                    else if(li!=LADDERS.end()){pendSL=true;pendDest=li->second;evMsg="LADDER! "+p.name+" climbs to "+std::to_string(pendDest)+"!";evTimer=2.5f;}
-                    else{if(p.pos>=100){p.done=true;state=GS::WIN;}else{cur=(cur+1)%nP;waitRoll=true;anim=false;statusMsg=std::string(PN[cur])+"'s turn - Roll!";}}
+                    if(si!=SNAKES.end()){pendSL=true;pendDest=si->second;sndSnake.play();evMsg="SNAKE! "+p.name+" slides to "+std::to_string(pendDest)+"!";evTimer=2.5f;}
+                    else if(li!=LADDERS.end()){pendSL=true;pendDest=li->second;sndLadder.play();evMsg="LADDER! "+p.name+" climbs to "+std::to_string(pendDest)+"!";evTimer=2.5f;}
+                    else{if(p.pos>=100){p.done=true;sndWin.play();state=GS::WIN;}else{cur=(cur+1)%nP;waitRoll=true;anim=false;statusMsg=std::string(PN[cur])+"'s turn - Roll!";}}
                 }
             }
             if(pendSL&&!players[cur].moving){
