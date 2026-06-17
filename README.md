@@ -21,8 +21,5 @@ g++ snakes.cpp -o game.exe -lsfml-graphics -lsfml-window -lsfml-system -lsfml-au
 - All 10 snakes and 8 ladders
 - Win screen
 
-## Team
-- Member 1: Game Logic
-- Member 2: Board Graphics
-- Member 3: Animations
-- Member 4: UI & Menus
+## self project
+ Board Graphics, Animations, UI & Menus
